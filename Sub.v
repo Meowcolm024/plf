@@ -868,7 +868,6 @@ Notation Integer := <{Base "Integer"}>.
 Example subtyping_example_0 :
   <{C->Bool}> <: <{C->Top}>.
 Proof. auto. Qed.
-
 (** **** Exercise: 2 stars, standard, optional (subtyping_judgements)
 
     (Leave this exercise [Admitted] until after you have finished adding product
@@ -912,14 +911,19 @@ Proof.
 Example subtyping_example_1 :
   <{Top->Student}> <:  <{(C->C)->Person}>.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  apply S_Arrow; auto.
+  apply sub_student_person.
+Qed.
+  (* FILL IN HERE Admitted. *)
 (** [] *)
 
 (** **** Exercise: 1 star, standard, optional (subtyping_example_2) *)
 Example subtyping_example_2 :
   <{Top->Person}> <: <{Person->Top}>.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  apply S_Arrow; auto.
+Qed.
+  (* FILL IN HERE Admitted. *)
 (** [] *)
 
 End Examples.
@@ -1045,30 +1049,16 @@ Proof with eauto.
   intros U V1 V2 Hs.
   remember <{V1->V2}> as V.
   generalize dependent V2. generalize dependent V1.
+  induction Hs...
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-Lemma absurd: forall S T, S <: T . Admitted.
-
-
 Lemma sub_trans : forall S T U,
   S <: T -> T <: U -> S <: U.
-Proof.
-  intros S T U H1. 
-  generalize dependent U.
-  induction H1.
-  eauto. eauto. eauto.
-  intros U H2. inversion H2; auto.
-  - eauto.
-  - apply S_Arrow.
-    
-
-
-    
-
-  
-    
-
+Proof with eauto.
+  intros S T U H1.
+  induction H1...
+Qed.
 
 (* ================================================================= *)
 (** ** Canonical Forms *)
@@ -1104,6 +1094,8 @@ Lemma canonical_forms_of_arrow_types : forall Gamma s T1 T2,
   exists x S1 s2,
      s = <{\x:S1,s2}>.
 Proof with eauto.
+  intros. induction H; try solve_by_invert...
+  - 
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
@@ -1275,6 +1267,9 @@ Lemma typing_inversion_var : forall Gamma (x:string) T,
   exists S,
     Gamma x = Some S /\ S <: T.
 Proof with eauto.
+  intros. inversion H; subst; eauto.
+  exists T1. split.
+
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
@@ -1347,7 +1342,24 @@ Proof.
   remember (x |-> U; Gamma) as Gamma'.
   generalize dependent Gamma.
   induction Ht; intros Gamma' G; simpl; eauto.
- (* FILL IN HERE *) Admitted.
+  - destruct (eqb_stringP x x0).
+    + rewrite G in H. rewrite e in H.
+      rewrite update_eq in H. inversion H.
+      rewrite <- H1.
+      apply weakening_empty. auto.
+    + rewrite G in H. 
+      apply update_neq with (m:= Gamma') (v:= U) in n.
+      rewrite n in H.
+      apply T_Var. auto.
+  - destruct (eqb_stringP x x0).
+    + subst. rewrite update_shadow in Ht.
+      apply T_Abs. apply Ht.
+    + subst. apply T_Abs.
+      apply IHHt.
+      apply update_permute.
+      auto.
+Qed.
+ (* FILL IN HERE Admitted. *)
 
 (* ================================================================= *)
 (** ** Preservation *)

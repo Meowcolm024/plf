@@ -142,9 +142,12 @@ Qed.
 Theorem progress' : forall t T,
      empty |- t \in T ->
      value t \/ exists t', t --> t'.
-Proof.
+Proof with eauto.
   intros t.
   induction t; intros T Ht; auto.
+  - inversion Ht; subst. inversion H1.
+  - inversion Ht.
+     
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
@@ -332,7 +335,19 @@ Proof.
   remember (x |-> U; Gamma) as Gamma'.
   generalize dependent Gamma.
   induction Ht; intros Gamma' G; simpl; eauto.
- (* FILL IN HERE *) Admitted.
+  - destruct (eqb_stringP x x0); subst.
+    + rewrite update_eq in H. inversion H.
+      rewrite <- H1. apply weakening_empty.
+      apply Hv.
+    + rewrite update_neq in H.
+      eauto. auto.
+  - destruct (eqb_stringP x x0); subst.
+    + rewrite update_shadow in Ht.
+      apply T_Abs in Ht. auto.
+    + apply T_Abs. apply IHHt.
+    apply update_permute. auto.
+Qed.  
+ (* FILL IN HERE Admitted. *)
 (** [] *)
 
 (* ================================================================= *)
@@ -443,7 +458,14 @@ Proof.
   intros t t' T Hhas_type Hmulti. unfold stuck.
   intros [Hnf Hnot_val]. unfold normal_form in Hnf.
   induction Hmulti.
-  (* FILL IN HERE *) Admitted.
+  - apply progress in Hhas_type. destruct Hhas_type.
+    contradiction. contradiction.
+  - apply IHHmulti.
+    + eapply preservation. apply Hhas_type. auto.
+    + apply Hnf.
+    + auto.
+Qed.
+  (* FILL IN HERE Admitted. *)
 (** [] *)
 
 (* ################################################################# *)
@@ -459,7 +481,24 @@ Theorem unique_types : forall Gamma e T T',
   Gamma |- e \in T' ->
   T = T'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros Gamma e T T' Ht1. generalize dependent T'.
+  induction Ht1; intros T' Ht2 ...
+  - inversion Ht2. inversion H.
+    rewrite H2 in H5. inversion H5.
+    rewrite <- H6. reflexivity.
+  - inversion Ht2; subst.
+    apply IHHt1 in H4.
+    rewrite <- H4. reflexivity.
+  - inversion Ht2; subst.
+    apply IHHt1_1 in H2. inversion H2.
+    auto.
+  - inversion Ht2. auto.
+  - inversion Ht2. auto.
+  - inversion Ht2; subst.
+    apply IHHt1_2. apply H5.
+Qed.
+
+  (* FILL IN HERE Admitted. *)
 (** [] *)
 
 (* ################################################################# *)
@@ -587,7 +626,12 @@ Proof.
   generalize dependent T.
   induction H;
          intros; try solve [inversion H0; eauto].
-  (* FILL IN HERE *) Admitted.
+  inversion H1; subst.
+  apply IHappears_free_in in H7.
+  rewrite update_neq in H7. 
+  auto. auto.
+Qed.
+  (* FILL IN HERE Admitted. *)
 (** [] *)
 
 (** From the [free_in_context] lemma, it immediately follows that any
